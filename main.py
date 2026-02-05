@@ -1,50 +1,42 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import uvicorn
 
-# Import your agent logic (Ensure these files exist in the same folder)
-from agent_loop import HoneypotAgent 
+# 1. THE FIX: Define 'app' at the top level so Uvicorn can find it
+app = FastAPI(title="Agentic Honeypot")
 
-# 1. This is the 'app' variable Uvicorn is looking for
-app = FastAPI(title="Agentic Honeypot API")
+# 2. THE IMPORT FIX: Using a try/except block 
+# This prevents the server from crashing if your other files have errors
+try:
+    from agent_loop import HoneypotAgent
+    agent = HoneypotAgent()
+    print("✅ Successfully loaded HoneypotAgent from agent_loop.py")
+except ImportError:
+    print("⚠️ Warning: agent_loop.py not found or has errors. Using MockAgent.")
+    class MockAgent:
+        def process_interaction(self, msg): return f"Mock response to: {msg}"
+    agent = MockAgent()
 
-# 2. Initialize your honeypot agent
-agent = HoneypotAgent()
+# --- Data Models ---
+class ChatInput(BaseModel):
+    message: str
 
-# 3. Define a data structure for incoming messages
-class Message(BaseModel):
-    content: str
-    sender: str = "unknown"
-
----
-
-### Endpoints
+# --- Endpoints ---
 
 @app.get("/")
-async def health_check():
-    """Check if the honeypot is online."""
-    return {
-        "status": "online",
-        "system": "Agentic Honeypot",
-        "docs_url": "/docs"
-    }
+async def root():
+    """This generates your base URL response"""
+    return {"message": "Honeypot API is live!", "docs": "/docs"}
 
 @app.post("/chat")
-async def chat_with_scammer(message: Message):
-    """
-    The main endpoint for your honeypot. 
-    Send a scammer's message here to get an AI-generated response.
-    """
+async def chat(input_data: ChatInput):
+    """This generates your interaction endpoint URL"""
     try:
-        # Calls the logic from your agent_loop.py
-        response = agent.process_interaction(message.content)
-        return {
-            "scammer_message": message.content,
-            "honeypot_reply": response
-        }
+        reply = agent.process_interaction(input_data.message)
+        return {"honeypot_reply": reply}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# This block allows you to run it via 'python main.py' as well
+# This part is optional but helpful for running via 'python main.py'
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
