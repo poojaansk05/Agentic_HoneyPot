@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from agent.agent_loop import run_agent
+from agent_loop import run_agent
 
 from mem1.intelligence_store import (
     update_intelligence,
@@ -49,3 +49,4 @@ print(intel)
 print("\n--- State history ---")
 for m in state["history"]:
     print(f"[{m['ts']}] {m['role']}: {m['content']}")
+
