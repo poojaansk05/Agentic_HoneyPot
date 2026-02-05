@@ -16,7 +16,7 @@ class Config:
 
     # ================= Agent Settings =================
     # Fast + free-tier friendly
-    CONVERSATION_MODEL = "gemini-2.0-flash"  
+    CONVERSATION_MODEL = "gemini-3-flash-preview"  
     
     # If you later want stronger reasoning:
     # CONVERSATION_MODEL = "gemini-1.5-pro"
@@ -25,5 +25,6 @@ class Config:
 
     # ================= Security =================
     ALLOWED_ORIGINS = ["*"]  # Lock this down in production
+
 
 config = Config()
